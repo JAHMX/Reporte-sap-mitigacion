@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan de Mitigación SAP S/4HANA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --blue-900: #042C53;
+    --blue-800: #0C447C;
+    --blue-600: #185FA5;
+    --blue-400: #378ADD;
+    --blue-100: #B5D4F4;
+    --blue-50:  #E6F1FB;
+    --amber-600: #854F0B;
+    --amber-400: #BA7517;
+    --amber-100: #FAC775;
+    --amber-50:  #FAEEDA;
+    --gray-900: #2C2C2A;
+    --gray-600: #5F5E5A;
+    --gray-200: #B4B2A9;
+    --gray-100: #D3D1C7;
+    --gray-50:  #F1EFE8;
+    --green-600: #3B6D11;
+    --green-50:  #EAF3DE;
+    --bg: #FAFAF8;
+    --card: #FFFFFF;
+    --border: rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--gray-900);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1.5px solid var(--gray-100);
+  }
+  .header-left { max-width: 560px; }
+  .project-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue-600);
+    background: var(--blue-50);
+    border: 0.5px solid var(--blue-100);
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+  }
+  .main-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--blue-900);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .sub-title {
+    font-size: 13px;
+    color: var(--gray-600);
+    font-weight: 300;
+  }
+  .header-right { text-align: right; }
+  .date-label { font-size: 11px; color: var(--gray-600); margin-bottom: 4px; }
+  .date-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-900);
+    background: none;
+    border: none;
+    text-align: right;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--gray-200);
+    padding: 2px 0;
+    width: 160px;
+  }
+  .date-value:focus { outline: none; border-bottom-color: var(--blue-400); }
+
+  /* ── METRICS GRID ───────────────────────────────── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .metric-card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .metric-card.accent { background: var(--blue-900); border-color: var(--blue-900); }
+  .metric-card.accent .metric-label { color: var(--blue-100); }
+  .metric-card.accent .metric-value { color: #fff; }
+  .metric-card.accent .metric-sub { color: var(--blue-100); }
+  .metric-label { font-size: 11px; color: var(--gray-600); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .metric-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--blue-800);
+    line-height: 1;
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    padding: 2px 0;
+    transition: border-color 0.15s;
+  }
+  .metric-value:focus { outline: none; border-bottom-color: var(--blue-400); }
+  .metric-card.accent .metric-value:focus { border-bottom-color: var(--blue-100); }
+  .metric-sub { font-size: 11px; color: var(--gray-600); margin-top: 4px; }
+
+  /* ── SECTION TITLE ──────────────────────────────── */
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gray-600);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 0.5px; background: var(--gray-100); }
+
+  /* ── WEEK RULER ─────────────────────────────────── */
+  .week-ruler {
+    display: grid;
+    grid-template-columns: 220px 1fr 80px;
+    gap: 14px;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .week-ticks {
+    display: flex;
+    justify-content: space-between;
+    padding-right: 4px;
+  }
+  .week-tick {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--gray-200);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── PHASES ─────────────────────────────────────── */
+  .phases { display: flex; flex-direction: column; gap: 12px; margin-bottom: 2rem; }
+
+  .phase-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 80px;
+    gap: 14px;
+    align-items: center;
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    transition: box-shadow 0.15s;
+  }
+  .phase-row:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+
+  .phase-info { }
+  .phase-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-900);
+    line-height: 1.3;
+    margin-bottom: 4px;
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    padding: 1px 0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: border-color 0.15s;
+  }
+  .phase-name:focus { outline: none; border-bottom-color: var(--blue-400); }
+  .phase-week { font-size: 11px; color: var(--gray-600); margin-bottom: 6px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+  .badge-done  { background: var(--green-50);  color: var(--green-600); }
+  .badge-wip   { background: var(--amber-50);  color: var(--amber-600); }
+  .badge-todo  { background: var(--gray-50);   color: var(--gray-600);  }
+
+  /* bar */
+  .bar-wrap { position: relative; }
+  .bar-bg {
+    background: var(--gray-50);
+    border: 0.5px solid var(--gray-100);
+    border-radius: 20px;
+    height: 22px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    position: relative;
+  }
+  .bar-fill::after {
+    content: attr(data-pct);
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+  }
+  .bar-fill.low::after { display: none; }
+
+  .pct-input {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: right;
+    background: none;
+    border: none;
+    width: 60px;
+    cursor: pointer;
+    border-bottom: 1px dashed var(--gray-200);
+    padding: 2px 0;
+    transition: border-color 0.15s;
+  }
+  .pct-input:focus { outline: none; border-bottom-color: var(--blue-400); }
+
+  /* ── FOOTER NOTES ───────────────────────────────── */
+  .notes-section { }
+  .notes-area {
+    width: 100%;
+    min-height: 80px;
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    color: var(--gray-900);
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  .notes-area:focus { outline: none; border-color: var(--blue-400); }
+  .notes-area::placeholder { color: var(--gray-200); }
+
+  /* ── BOTTOM BAR ─────────────────────────────────── */
+  .bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 0.5px solid var(--gray-100);
+  }
+  .legend { display: flex; gap: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--gray-600); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  .btn-print {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--blue-900);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-print:hover { background: var(--blue-800); }
+
+  /* tooltip hint */
+  .edit-hint {
+    font-size: 11px;
+    color: var(--gray-200);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.03em;
+  }
+
+  @media print {
+    body { background: #fff; padding: 1rem; }
+    .btn-print, .edit-hint { display: none; }
+    .phase-row:hover { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ───────────────────────────────────────── -->
+<div class="header">
+  <div class="header-left">
+    <div class="project-tag">SAP S/4HANA · Mitigación</div>
+    <h1 class="main-title">Plan de Mitigación de Desviaciones</h1>
+    <p class="sub-title">Reporte de avance — editable y reutilizable</p>
+  </div>
+  <div class="header-right">
+    <div class="date-label">Fecha de corte</div>
+    <input class="date-value" id="report-date" type="text" value="12 de marzo de 2026">
+    <div style="font-size:10px; color:var(--gray-200); margin-top:4px;">Click para editar</div>
+  </div>
+</div>
+
+<p class="edit-hint">✎ Haz click en cualquier número, nombre o texto para editarlo</p>
+
+<!-- ── METRICS ──────────────────────────────────────── -->
+<div class="metrics-grid">
+  <div class="metric-card accent">
+    <div class="metric-label">Avance general</div>
+    <input class="metric-value" id="met-avance" type="text" value="37%">
+    <div class="metric-sub">Progreso consolidado</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Total carga</div>
+    <input class="metric-value" id="met-carga" type="text" value="176 HH" style="color:var(--gray-900)">
+    <div class="metric-sub">Horas-hombre estimadas</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Etapa activa</div>
+    <input class="metric-value" id="met-etapa" type="text" value="49%" style="color:var(--amber-400)">
+    <div class="metric-sub">Estrategia de Corrección</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Semana actual</div>
+    <input class="metric-value" id="met-semana" type="text" value="S2" style="color:var(--gray-900)">
+    <div class="metric-sub">De 3 semanas totales</div>
+  </div>
+</div>
+
+<!-- ── PHASES ───────────────────────────────────────── -->
+<div class="section-title">Avance por etapa</div>
+
+<div class="week-ruler">
+  <div></div>
+  <div class="week-ticks">
+    <span class="week-tick">SEM 1</span>
+    <span class="week-tick">SEM 2</span>
+    <span class="week-tick">SEM 3</span>
+    <span class="week-tick">100%</span>
+  </div>
+  <div></div>
+</div>
+
+<div class="phases" id="phases-container">
+
+  <!-- Phase 1 -->
+  <div class="phase-row" data-id="1">
+    <div class="phase-info">
+      <input class="phase-name" type="text" value="Comparación Levantamiento Desviaciones">
+      <div class="phase-week">Semana 1</div>
+      <span class="badge badge-done">✓ Completada</span>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-bg">
+        <div class="bar-fill" id="bar-1" data-pct="100%" style="width:100%; background:#185FA5;"></div>
+      </div>
+    </div>
+    <input class="pct-input" id="pct-1" type="text" value="100%" style="color:#185FA5"
+      oninput="updateBar(1, this.value)">
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase-row" data-id="2">
+    <div class="phase-info">
+      <input class="phase-name" type="text" value="Estrategia de Corrección">
+      <div class="phase-week">Semana 1–2</div>
+      <span class="badge badge-wip">● En curso</span>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-bg">
+        <div class="bar-fill" id="bar-2" data-pct="49%" style="width:49%; background:linear-gradient(90deg,#185FA5,#378ADD);"></div>
+      </div>
+    </div>
+    <input class="pct-input" id="pct-2" type="text" value="49%" style="color:#BA7517"
+      oninput="updateBar(2, this.value)">
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase-row" data-id="3">
+    <div class="phase-info">
+      <input class="phase-name" type="text" value="Validación Funcional & Planillas de Carga">
+      <div class="phase-week">Semana 2</div>
+      <span class="badge badge-todo">○ No iniciada</span>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-bg">
+        <div class="bar-fill low" id="bar-3" data-pct="0%" style="width:0%; background:#B5D4F4;"></div>
+      </div>
+    </div>
+    <input class="pct-input" id="pct-3" type="text" value="0%" style="color:#B4B2A9"
+      oninput="updateBar(3, this.value)">
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="phase-row" data-id="4">
+    <div class="phase-info">
+      <input class="phase-name" type="text" value="Validación Gobierno Datos & Carga al Sistema">
+      <div class="phase-week">Semana 3</div>
+      <span class="badge badge-todo">○ No iniciada</span>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-bg">
+        <div class="bar-fill low" id="bar-4" data-pct="0%" style="width:0%; background:#B5D4F4;"></div>
+      </div>
+    </div>
+    <input class="pct-input" id="pct-4" type="text" value="0%" style="color:#B4B2A9"
+      oninput="updateBar(4, this.value)">
+  </div>
+
+</div>
+
+<!-- ── NOTES ─────────────────────────────────────────── -->
+<div class="notes-section">
+  <div class="section-title">Observaciones</div>
+  <textarea class="notes-area" placeholder="Agregar comentarios, alertas o próximos pasos aquí...">Avance Etapa 2 - Estrategia de Corrección del 49%. Pendiente definición modelo objetivo y alineación con áreas.</textarea>
+</div>
+
+<!-- ── BOTTOM ─────────────────────────────────────────── -->
+<div class="bottom-bar">
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>Completado</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#BA7517"></div>En curso</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#D3D1C7"></div>No iniciado</div>
+  </div>
+  <button class="btn-print" onclick="window.print()">⎙ Imprimir / Exportar PDF</button>
+</div>
+
+<script>
+  function updateBar(id, val) {
+    const raw = parseFloat(val);
+    if (isNaN(raw)) return;
+    const pct = Math.min(100, Math.max(0, raw));
+    const bar = document.getElementById('bar-' + id);
+    bar.style.width = pct + '%';
+    bar.setAttribute('data-pct', pct + '%');
+    bar.classList.toggle('low', pct < 15);
+  }
+
+  // Allow typing % sign or plain number
+  document.querySelectorAll('.pct-input').forEach(input => {
+    input.addEventListener('blur', function() {
+      const id = this.closest('.phase-row').dataset.id;
+      let val = this.value.replace('%','').trim();
+      const num = parseFloat(val);
+      if (!isNaN(num)) {
+        this.value = Math.min(100, Math.max(0, num)) + '%';
+        updateBar(id, num);
+      }
+    });
+  });
+</script>
+</body>
+</html>
